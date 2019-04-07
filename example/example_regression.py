@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     iris = load_iris()
     X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.33, random_state=0)
-    datasets['iris'] = [X_train, y_train, X_test, y_test]
+    datasets['iris'] = [X_train, y_train, X_test, y_test, iris.feature_names]
     
     scaler_x = StandardScaler()
     scaler_y = StandardScaler()
@@ -31,11 +31,11 @@ if __name__ == "__main__":
     X_test = scaler_x.transform(X_test)
     y_train = scaler_y.fit_transform(y_train.reshape(-1, 1)).reshape(-1)
     y_test = scaler_y.transform(y_test.reshape(-1, 1)).reshape(-1)
-    datasets['iris_normal'] = [X_train, y_train, X_test, y_test, scaler_y]
+    datasets['iris_normal'] = [X_train, y_train, X_test, y_test, iris.feature_names, scaler_y]
     
     boston = load_boston()
     X_train, X_test, y_train, y_test = train_test_split(boston.data, boston.target, test_size=0.33, random_state=0)
-    datasets['boston'] = [X_train, y_train, X_test, y_test]
+    datasets['boston'] = [X_train, y_train, X_test, y_test, boston.feature_names]
     
     scaler_x = StandardScaler()
     scaler_y = StandardScaler()
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     X_test = scaler_x.transform(X_test)
     y_train = scaler_y.fit_transform(y_train.reshape(-1, 1)).reshape(-1)
     y_test = scaler_y.transform(y_test.reshape(-1, 1)).reshape(-1)
-    datasets['boston_normal'] = [X_train, y_train, X_test, y_test, scaler_y]
+    datasets['boston_normal'] = [X_train, y_train, X_test, y_test, boston.feature_names, scaler_y]
     
     algorithms = ['nn', 'knn', 'lasso', 'ridge', 'svr', 'gpr', 'rf', 'xgboost', 'lightgbm']
     metrics = ['RMSE', 'MAE', 'RMSPE', 'MAPE', 'R2']

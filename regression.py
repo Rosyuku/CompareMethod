@@ -6,6 +6,7 @@ Created on Sun Apr  7 02:08:36 2019
 """
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import time
 
@@ -96,7 +97,7 @@ def xgboost(X_train, y_train, X_test, y_test):
     pred_test = reg.predict(X_test)
     time_test = time.time() - start
     
-    return pred_train, pred_test, time_train, time_test
+    return pred_train, pred_test, time_train, time_test, reg.feature_importances_
 
 def lasso(X_train, y_train, X_test, y_test):
     
@@ -111,7 +112,7 @@ def lasso(X_train, y_train, X_test, y_test):
     pred_test = reg.predict(X_test)
     time_test = time.time() - start
     
-    return pred_train, pred_test, time_train, time_test
+    return pred_train, pred_test, time_train, time_test, reg.coef_
 
 def ridge(X_train, y_train, X_test, y_test):
     
@@ -126,7 +127,7 @@ def ridge(X_train, y_train, X_test, y_test):
     pred_test = reg.predict(X_test)
     time_test = time.time() - start
     
-    return pred_train, pred_test, time_train, time_test
+    return pred_train, pred_test, time_train, time_test, reg.coef_
 
 def svr(X_train, y_train, X_test, y_test):
     
@@ -164,7 +165,7 @@ def rf(X_train, y_train, X_test, y_test):
     pred_test = reg.predict(X_test)
     time_test = time.time() - start
     
-    return pred_train, pred_test, time_train, time_test
+    return pred_train, pred_test, time_train, time_test, reg.feature_importances_
 
 def lightgbm(X_train, y_train, X_test, y_test):
     
@@ -183,7 +184,7 @@ def lightgbm(X_train, y_train, X_test, y_test):
     pred_test = reg.predict(X_test)
     time_test = time.time() - start
     
-    return pred_train, pred_test, time_train, time_test
+    return pred_train, pred_test, time_train, time_test, reg.feature_importances_
 
 def get_summary(datasets, algorithms, metrics, plot=False):
 
@@ -192,14 +193,15 @@ def get_summary(datasets, algorithms, metrics, plot=False):
     for key in datasets.keys():
         print(key)
         
-        if len(datasets[key]) == 4:
-            X_train, y_train, X_test, y_test = datasets[key]
+        if len(datasets[key]) == 5:
+            X_train, y_train, X_test, y_test, feature_names = datasets[key]
             scaler_y = None
-        elif len(datasets[key]) == 5:
-            X_train, y_train, X_test, y_test, scaler_y = datasets[key]
+        elif len(datasets[key]) == 6:
+            X_train, y_train, X_test, y_test, feature_names, scaler_y = datasets[key]
         
         res_train = pd.DataFrame(data=y_train, columns=['True'])
         res_test = pd.DataFrame(data=y_test, columns=['True'])
+        feature_importances = pd.DataFrame(index=feature_names)
         time_train = pd.Series()
         time_pred = pd.Series()
         metrics_train = pd.DataFrame(index=metrics, columns=algorithms)
@@ -216,11 +218,11 @@ def get_summary(datasets, algorithms, metrics, plot=False):
     
         if 'ridge' in algorithms:
             alg = 'ridge'
-            res_train[alg], res_test[alg], time_train[alg], time_pred[alg] = ridge(X_train, y_train, X_test, y_test)
+            res_train[alg], res_test[alg], time_train[alg], time_pred[alg], feature_importances[alg] = ridge(X_train, y_train, X_test, y_test)
            
         if 'lasso' in algorithms:
             alg = 'lasso'
-            res_train[alg], res_test[alg], time_train[alg], time_pred[alg] = lasso(X_train, y_train, X_test, y_test)
+            res_train[alg], res_test[alg], time_train[alg], time_pred[alg], feature_importances[alg] = lasso(X_train, y_train, X_test, y_test)
     
         if 'svr' in algorithms:
             alg = 'svr'
@@ -232,15 +234,15 @@ def get_summary(datasets, algorithms, metrics, plot=False):
             
         if 'rf' in algorithms:
             alg = 'rf'
-            res_train[alg], res_test[alg], time_train[alg], time_pred[alg] = rf(X_train, y_train, X_test, y_test)
+            res_train[alg], res_test[alg], time_train[alg], time_pred[alg], feature_importances[alg] = rf(X_train, y_train, X_test, y_test)
     
         if 'xgboost' in algorithms:
             alg = 'xgboost'
-            res_train[alg], res_test[alg], time_train[alg], time_pred[alg] = xgboost(X_train, y_train, X_test, y_test)
+            res_train[alg], res_test[alg], time_train[alg], time_pred[alg], feature_importances[alg] = xgboost(X_train, y_train, X_test, y_test)
     
         if 'lightgbm' in algorithms:
             alg = 'lightgbm'
-            res_train[alg], res_test[alg], time_train[alg], time_pred[alg] = lightgbm(X_train, y_train, X_test, y_test)
+            res_train[alg], res_test[alg], time_train[alg], time_pred[alg], feature_importances[alg] = lightgbm(X_train, y_train, X_test, y_test)
     
         if scaler_y is not None:
             res_train = pd.DataFrame(index=res_train.index, columns=res_train.columns, data=scaler_y.inverse_transform(res_train))
@@ -287,6 +289,7 @@ def get_summary(datasets, algorithms, metrics, plot=False):
         result["metrics_train"] = metrics_train
         result["metrics_test"] = metrics_test
         result["time"] = timer
+        result["feature_importances"] = feature_importances
         
         results[key] = result
         

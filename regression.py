@@ -18,9 +18,10 @@ from sklearn.svm import SVR
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.neighbors import KNeighborsRegressor
 
 from sklearn.model_selection import GridSearchCV
-from sklearn.neighbors import KNeighborsRegressor
+from sklearn.preprocessing import StandardScaler
 
 def nn(X_train, y_train, X_test, y_test):
 
@@ -43,7 +44,7 @@ def knn(X_train, y_train, X_test, y_test):
     reg = KNeighborsRegressor()
     
     start = time.time()
-    reg_cv = GridSearchCV(reg, {'n_neighbors': [2,3,4,5,6,7,8,9,10]}, verbose=1)
+    reg_cv = GridSearchCV(reg, {'n_neighbors': [2,3,4,5,6,7]}, verbose=1)
     reg_cv.fit(X_train, y_train)
     print(reg_cv.best_params_, reg_cv.best_score_)
     reg = KNeighborsRegressor(**reg_cv.best_params_)    
@@ -186,7 +187,7 @@ def lightgbm(X_train, y_train, X_test, y_test):
     
     return pred_train, pred_test, time_train, time_test, reg.feature_importances_
 
-def get_summary(datasets, algorithms, metrics, plot=False):
+def get_summary(datasets, algorithms, metrics, normalize=True, plot=False):
 
     results = dict()
     
@@ -198,6 +199,14 @@ def get_summary(datasets, algorithms, metrics, plot=False):
             scaler_y = None
         elif len(datasets[key]) == 6:
             X_train, y_train, X_test, y_test, feature_names, scaler_y = datasets[key]
+            
+        if normalize == True:
+            scaler_x = StandardScaler()
+            scaler_y = StandardScaler()
+            X_train = scaler_x.fit_transform(X_train)
+            X_test = scaler_x.transform(X_test)
+            y_train = scaler_y.fit_transform(y_train.reshape(-1, 1)).reshape(-1)
+            y_test = scaler_y.transform(y_test.reshape(-1, 1)).reshape(-1)            
         
         res_train = pd.DataFrame(data=y_train, columns=['True'])
         res_test = pd.DataFrame(data=y_test, columns=['True'])
